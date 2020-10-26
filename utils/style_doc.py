@@ -212,7 +212,6 @@ class CodeStyler:
         self.current_indent = ""
         # If one of those is True, the paragraph should not be touched (code samples, lists...)
         no_style = False
-        no_style_next = False
         self.in_block = self.init_in_block(text)
         # If this is True, we force-break a paragraph, even if there is no new empty line.
         break_paragraph = False
@@ -262,8 +261,7 @@ class CodeStyler:
                     new_lines.append("")
 
                 paragraph = []
-                no_style = no_style_next
-                no_style_next = False
+                no_style = False
                 last_line = None
                 if not break_paragraph or line_is_empty:
                     break_paragraph = False
@@ -279,11 +277,8 @@ class CodeStyler:
             ):
                 line = line[0] * max_len
                 break_paragraph = True
-            # proper doc comment indicates the next paragraph should be no-style.
-            if _re_doc_ignore.search(line) is not None:
-                no_style = no_style_next = True
             # Table are in just one paragraph and should be no-style.
-            if _re_table.search(line) is not None:
+            if _re_table.search(line) is not None or _re_doc_ignore.search(line) is not None:
                 no_style = True
             paragraph.append(line)
             last_line = line

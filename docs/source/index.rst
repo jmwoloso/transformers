@@ -54,8 +54,7 @@ The documentation is organized in five parts:
 The library currently contains PyTorch and Tensorflow implementations, pre-trained model weights, usage scripts and
 conversion utilities for the following models:
 
-.. docstyle-comment
-
+..
     This list is updated automatically from the README with `make fix-copies`. Do not update manually!
 
 1. :doc:`ALBERT <model_doc/albert>` (from Google Research and the Toyota Technological Institute at Chicago) released
@@ -123,7 +122,7 @@ conversion utilities for the following models:
 20. :doc:`MarianMT <model_doc/marian>` Machine translation models trained using `OPUS <http://opus.nlpl.eu/>`__ data by
     Jörg Tiedemann. The `Marian Framework <https://marian-nmt.github.io/>`__ is being developed by the Microsoft
     Translator Team.
-21. :doc:`MBart <model_doc/mbart>` (from Facebook) released with the paper  `Multilingual Denoising Pre-training for
+21. :doc:`MBart <model_doc/mbart>` (from Facebook) released with the paper `Multilingual Denoising Pre-training for
     Neural Machine Translation <https://arxiv.org/abs/2001.08210>`__ by Yinhan Liu, Jiatao Gu, Naman Goyal, Xian Li,
     Sergey Edunov, Marjan Ghazvininejad, Mike Lewis, Luke Zettlemoyer.
 22. :doc:`Pegasus <model_doc/pegasus>` (from Google) released with the paper `PEGASUS: Pre-training with Extracted
