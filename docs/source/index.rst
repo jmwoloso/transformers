@@ -47,14 +47,15 @@ The documentation is organized in five parts:
 - **RESEARCH** focuses on tutorials that have less to do with how to use the library but more about general resarch in
   transformers model
 - The three last section contain the documentation of each public class and function, grouped in:
-    - **MAIN CLASSES** for the main classes exposing the important APIs of the library.
+
     - **MODELS** for the classes and functions related to each model implemented in the library.
     - **INTERNAL HELPERS** for the classes and functions we use internally.
 
 The library currently contains PyTorch and Tensorflow implementations, pre-trained model weights, usage scripts and
 conversion utilities for the following models:
 
-..
+.. docstyle-comment
+
     This list is updated automatically from the README with `make fix-copies`. Do not update manually!
 
 1. :doc:`ALBERT <model_doc/albert>` (from Google Research and the Toyota Technological Institute at Chicago) released
@@ -161,6 +162,7 @@ conversion utilities for the following models:
     Yang, Jaime Carbonell, Ruslan Salakhutdinov, Quoc V. Le.
 33. `Other community models <https://huggingface.co/models>`__, contributed by the `community
     <https://huggingface.co/users>`__.
+
 
 .. toctree::
     :maxdepth: 2
