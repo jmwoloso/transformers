@@ -48,6 +48,7 @@ The documentation is organized in five parts:
   transformers model
 - The three last section contain the documentation of each public class and function, grouped in:
 
+    - **MAIN CLASSES** for the main classes exposing the important APIs of the library.
     - **MODELS** for the classes and functions related to each model implemented in the library.
     - **INTERNAL HELPERS** for the classes and functions we use internally.
 
