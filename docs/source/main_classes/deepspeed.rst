@@ -73,8 +73,6 @@ or via ``transformers``' ``extras``:
 
     pip install transformers[deepspeed]
 
-(will become available starting from ``transformers==4.6.0``)
-
 or find more details on `the DeepSpeed's GitHub page <https://github.com/microsoft/deepspeed#installation>`__ and
 `advanced install <https://www.deepspeed.ai/tutorials/advanced-install/>`__.
 
@@ -90,20 +88,31 @@ To make a local build for DeepSpeed:
     git clone https://github.com/microsoft/DeepSpeed/
     cd DeepSpeed
     rm -rf build
-    TORCH_CUDA_ARCH_LIST="6.1;8.6" DS_BUILD_OPS=1 pip install . \
+    TORCH_CUDA_ARCH_LIST="8.6" DS_BUILD_CPU_ADAM=1 DS_BUILD_UTILS=1 pip install . \
     --global-option="build_ext" --global-option="-j8" --no-cache -v \
     --disable-pip-version-check 2>&1 | tee build.log
 
-Edit ``TORCH_CUDA_ARCH_LIST`` to insert the code for the architectures of the GPU cards you intend to use.
+If you intend to use NVMe offload you will need to also include ``DS_BUILD_AIO=1`` in the instructions above (and also
+install `libaio-dev` system-wide).
 
-Or if you need to use the same setup on multiple machines, make a binary wheel:
+Edit ``TORCH_CUDA_ARCH_LIST`` to insert the code for the architectures of the GPU cards you intend to use. Assuming all
+your cards are the same you can get the arch via:
+
+.. code-block:: bash
+
+    CUDA_VISIBLE_DEVICES=0 python -c "import torch; print(torch.cuda.get_device_capability())"
+
+So if you get ``8, 6``, then use ``TORCH_CUDA_ARCH_LIST="8.6"``. If you have multiple different cards, you can list all
+of them like so ``TORCH_CUDA_ARCH_LIST="6.1;8.6"``
+
+If you need to use the same setup on multiple machines, make a binary wheel:
 
 .. code-block:: bash
 
     git clone https://github.com/microsoft/DeepSpeed/
     cd DeepSpeed
     rm -rf build
-    TORCH_CUDA_ARCH_LIST="6.1;8.6" DS_BUILD_OPS=1 \
+    TORCH_CUDA_ARCH_LIST="8.6" DS_BUILD_CPU_ADAM=1 DS_BUILD_UTILS=1 \
     python setup.py build_ext -j8 bdist_wheel
 
 it will generate something like ``dist/deepspeed-0.3.13+8cd046f-cp38-cp38-linux_x86_64.whl`` which now you can install
@@ -238,17 +247,20 @@ with DeepSpeed is to have at least the following configuration in the configurat
     {
       "zero_optimization": {
          "stage": 2,
+         "offload_optimizer": {
+             "device": "cpu",
+             "pin_memory": true
+         },
          "allgather_partitions": true,
          "allgather_bucket_size": 2e8,
          "reduce_scatter": true,
          "reduce_bucket_size": 2e8,
          "overlap_comm": true,
-         "contiguous_gradients": true,
-         "cpu_offload": true
+         "contiguous_gradients": true
       }
     }
 
-which enables ``cpu_offload`` and some other important features. You may experiment with the buffer sizes, you will
+which enables optimizer offload and some other important features. You may experiment with the buffer sizes, you will
 find more details in the discussion below.
 
 For a practical usage example of this type of deployment, please, see this `post
@@ -352,7 +364,7 @@ cell with:
             },
             "overlap_comm": true,
             "contiguous_gradients": true,
-            "sub_group_size": 1e14,
+            "sub_group_size": 1e9,
             "reduce_bucket_size": "auto",
             "stage3_prefetch_bucket_size": "auto",
             "stage3_param_persistence_threshold": "auto",
@@ -463,13 +475,16 @@ precision training if ``--fp16`` is passed:
 
         "zero_optimization": {
             "stage": 2,
+            "offload_optimizer": {
+                "device": "cpu",
+                "pin_memory": true
+            },
             "allgather_partitions": true,
             "allgather_bucket_size": 2e8,
             "overlap_comm": true,
             "reduce_scatter": true,
             "reduce_bucket_size": 2e8,
-            "contiguous_gradients": true,
-            "cpu_offload": true
+            "contiguous_gradients": true
         },
 
         "gradient_accumulation_steps": "auto",
@@ -537,7 +552,14 @@ difficult to detect ways. You have been warned.
 There are multiple other values that are specific to DeepSpeed-only and those you will have to set manually to suit
 your needs.
 
+In your own programs, you can also use the following approach if you'd like to modify the DeepSpeed config as a master
+and configure :class:`~transformers.TrainingArguments` based on that. The steps are:
 
+1. Create or load the DeepSpeed configuration to be used as a master configuration
+2. Create the :class:`~transformers.TrainingArguments` object based on these values
+
+Do note that some values, such as :obj:`scheduler.params.total_num_steps` are calculated by
+:class:`~transformers.Trainer` during ``train``, but you can of course do the math yourself.
 
 .. _deepspeed-zero:
 
@@ -575,19 +597,22 @@ The following is an example configuration for ZeRO stage 2:
     {
         "zero_optimization": {
             "stage": 2,
+            "offload_optimizer": {
+                "device": "cpu",
+                "pin_memory": true
+            },
             "allgather_partitions": true,
             "allgather_bucket_size": 5e8,
             "overlap_comm": true,
             "reduce_scatter": true,
             "reduce_bucket_size": 5e8,
-            "contiguous_gradients": true,
-            "cpu_offload": true
+            "contiguous_gradients": true
         }
     }
 
 **Performance tuning:**
 
-- enabling ``cpu_offload`` should reduce GPU RAM usage (it requires ``"stage": 2``)
+- enabling ``offload_optimizer`` should reduce GPU RAM usage (it requires ``"stage": 2``)
 - ``"overlap_comm": true`` trades off increased GPU RAM usage to lower all-reduce latency. ``overlap_comm`` uses 4.5x
   the ``allgather_bucket_size`` and ``reduce_bucket_size`` values. So if they are set to 5e8, this requires a 9GB
   footprint (``5e8 x 2Bytes x 2 x 4.5``). Therefore, if you have a GPU with 8GB or less RAM, to avoid getting
@@ -621,7 +646,7 @@ The following is an example configuration for ZeRO stage 3:
             },
             "overlap_comm": true,
             "contiguous_gradients": true,
-            "sub_group_size": 1e14,
+            "sub_group_size": 1e9,
             "reduce_bucket_size": "auto",
             "stage3_prefetch_bucket_size": "auto",
             "stage3_param_persistence_threshold": "auto",
@@ -642,7 +667,6 @@ and its typically accessed much faster than normal CPU memory.
 
 **Performance tuning:**
 
-- ``sub_group_size``: ``1e14``
 - ``stage3_max_live_parameters``: ``1e9``
 - ``stage3_max_reuse_distance``: ``1e9``
 
@@ -673,8 +697,21 @@ flexible.
 
 If you're migrating from ZeRO-2 configuration note that ``allgather_partitions``, ``allgather_bucket_size`` and
 ``reduce_scatter`` configuration parameters are not used in ZeRO-3. If you keep these in the config file they will just
-be ignored. Make sure to remove ``cpu_offload`` though, since it has been deprecated in ZeRO-3.
+be ignored.
 
+- ``sub_group_size``: ``1e9``
+
+``sub_group_size`` controls the granularity in which parameters are updated during optimizer steps. Parameters are
+grouped into buckets of ``sub_group_size`` and each buckets is updated one at a time. When used with NVMe offload in
+ZeRO-Infinity, ``sub_group_size`` therefore controls the granularity in which model states are moved in and out of CPU
+memory from NVMe during the optimizer step. This prevents running out of CPU memory for extremely large models.
+
+You can leave ``sub_group_size`` to its default value of `1e9` when not using NVMe offload. You may want to change its
+default value in the following cases:
+
+1. Running into OOM during optimizer step: Reduce ``sub_group_size`` to reduce memory utilization of temporary buffers
+2. Optimizer Step is taking a long time: Increase ``sub_group_size`` to improve bandwidth utilization as a result of
+   the increased data buffers.
 
 
 .. _deepspeed-nvme:
@@ -718,7 +755,7 @@ The following configuration example enables NVMe to offload both optimizer state
             }
             "overlap_comm": true,
             "contiguous_gradients": true,
-            "sub_group_size": 1e14,
+            "sub_group_size": 1e9,
             "reduce_bucket_size": "auto",
             "stage3_prefetch_bucket_size": "auto",
             "stage3_param_persistence_threshold": "auto",
@@ -759,9 +796,9 @@ It's possible to adjust ZeRO-3 configuration to make it perform closer to ZeRO-2
 
 - set ``stage3_param_persistence_threshold`` to a very large number - larger than the largest parameter, e.g., ``6 *
   hidden_size * hidden_size``. This will keep the parameters on the GPUs.
-- turn off ``cpu_offload_params`` since ZeRO-2 doesn't have that option.
+- turn off ``offload_params`` since ZeRO-2 doesn't have that option.
 
-The performance will likely improve significantly with just ``cpu_offload_params`` turned off, even if you don't change
+The performance will likely improve significantly with just ``offload_params`` turned off, even if you don't change
 ``stage3_param_persistence_threshold``. Of course, these changes will impact the size of the model you can train. So
 these help you to trade scalability for speed depending on your needs.
 
@@ -807,13 +844,16 @@ Here is a full ZeRO-2 auto-configuration file ``ds_config_zero2.json``:
 
         "zero_optimization": {
             "stage": 2,
+            "offload_optimizer": {
+                "device": "cpu",
+                "pin_memory": true
+            },
             "allgather_partitions": true,
             "allgather_bucket_size": 2e8,
             "overlap_comm": true,
             "reduce_scatter": true,
             "reduce_bucket_size": 2e8,
-            "contiguous_gradients": true,
-            "cpu_offload": true
+            "contiguous_gradients": true
         },
 
         "gradient_accumulation_steps": "auto",
@@ -861,13 +901,16 @@ values look like, but we highly recommend using the one with multiple ``auto`` s
 
         "zero_optimization": {
             "stage": 2,
+            "offload_optimizer": {
+                "device": "cpu",
+                "pin_memory": true
+            },
             "allgather_partitions": true,
             "allgather_bucket_size": 2e8,
             "overlap_comm": true,
             "reduce_scatter": true,
             "reduce_bucket_size": 2e8,
-            "contiguous_gradients": true,
-            "cpu_offload": true
+            "contiguous_gradients": true
         },
 
         "steps_per_print": 2000,
@@ -927,7 +970,7 @@ Here is a full ZeRO-3 auto-configuration file ``ds_config_zero3.json``:
             },
             "overlap_comm": true,
             "contiguous_gradients": true,
-            "sub_group_size": 1e14,
+            "sub_group_size": 1e9,
             "reduce_bucket_size": "auto",
             "stage3_prefetch_bucket_size": "auto",
             "stage3_param_persistence_threshold": "auto",
@@ -990,7 +1033,7 @@ values look like, but we highly recommend using the one with multiple ``auto`` s
             },
             "overlap_comm": true,
             "contiguous_gradients": true,
-            "sub_group_size": 1e14,
+            "sub_group_size": 1e9,
             "reduce_bucket_size": 1e6,
             "stage3_prefetch_bucket_size": 0.94e6,
             "stage3_param_persistence_threshold": 1e4,
@@ -1007,8 +1050,8 @@ values look like, but we highly recommend using the one with multiple ``auto`` s
 Optimizer and Scheduler
 =======================================================================================================================
 
-As long as you don't enable ``cpu_offload`` you can mix and match DeepSpeed and HuggingFace schedulers and optimizers,
-with the exception of using the combination of HuggingFace scheduler and DeepSpeed optimizer:
+As long as you don't enable ``offload_optimizer`` you can mix and match DeepSpeed and HuggingFace schedulers and
+optimizers, with the exception of using the combination of HuggingFace scheduler and DeepSpeed optimizer:
 
 +--------------+--------------+--------------+
 | Combos       | HF Scheduler | DS Scheduler |
@@ -1018,7 +1061,7 @@ with the exception of using the combination of HuggingFace scheduler and DeepSpe
 | DS Optimizer | No           | Yes          |
 +--------------+--------------+--------------+
 
-If ``cpu_offload`` is enabled you must use both DeepSpeed scheduler and DeepSpeed optimizer.
+If ``offload_optimizer`` is enabled you must use both DeepSpeed scheduler and DeepSpeed optimizer.
 
 
 
@@ -1506,6 +1549,8 @@ Note: If the fp16 weights of the model can't fit onto the memory of a single GPU
 For full details on this method and other related features please refer to `Constructing Massive Models
 <https://deepspeed.readthedocs.io/en/latest/zero3.html#constructing-massive-models>`__.
 
+Also when loading fp16-pretrained models, you will want to tell ``from_pretrained`` to use
+``torch_dtype=torch.float16``. For details, please, see :ref:`from_pretrained-torch-dtype`.
 
 
 Gathering Parameters
@@ -1531,6 +1576,56 @@ stress on ``tensor([1.])``, or if you get an error where it says the parameter i
 larger multi-dimensional shape, this means that the parameter is partitioned and what you see is a ZeRO-3 placeholder.
 
 
+
+
+Filing Issues
+=======================================================================================================================
+
+Here is how to file an issue so that we could quickly get to the bottom of the issue and help you to unblock your work.
+
+In your report please always include:
+
+1. the full Deepspeed config file in the report
+
+2. either the command line arguments if you were using the :class:`~transformers.Trainer` or
+   :class:`~transformers.TrainingArguments` arguments if you were scripting the Trainer setup yourself. Please do not
+   dump the :class:`~transformers.TrainingArguments` as it has dozens of entries that are irrelevant.
+
+3. Output of:
+
+.. code-block:: bash
+
+    python -c 'import torch; print(f"torch: {torch.__version__}")'
+    python -c 'import transformers; print(f"transformers: {transformers.__version__}")'
+    python -c 'import deepspeed; print(f"deepspeed: {deepspeed.__version__}")'
+
+4. If possible include a link to a Google Colab notebook that we can reproduce the problem with. You can use this
+   `notebook <https://github.com/stas00/porting/blob/master/transformers/deepspeed/DeepSpeed_on_colab_CLI.ipynb>`__ as
+   a starting point.
+
+5. Unless it's impossible please always use a standard dataset that we can use and not something custom.
+
+6. If possible try to use one of the existing `examples
+   <https://github.com/huggingface/transformers/tree/master/examples/pytorch>`__ to reproduce the problem with.
+
+Things to consider:
+
+* Deepspeed is often not the cause of the problem.
+
+    Some of the filed issues proved to be Deepspeed-unrelated. That is once Deepspeed was removed from the setup, the
+    problem was still there.
+
+    Therefore, if it's not absolutely obvious it's a DeepSpeed-related problem, as in you can see that there is an
+    exception and you can see that DeepSpeed modules are involved, first re-test your setup without DeepSpeed in it.
+    And only if the problem persists then do mentioned Deepspeed and supply all the required details.
+
+* If it's clear to you that the issue is in the DeepSpeed core and not the integration part, please file the Issue
+  directly with `Deepspeed <https://github.com/microsoft/DeepSpeed/>`__. If you aren't sure, please do not worry,
+  either Issue tracker will do, we will figure it out once you posted it and redirect you to another Issue tracker if
+  need be.
+
+
+
 Troubleshooting
 =======================================================================================================================
 
@@ -1539,8 +1634,8 @@ Troubleshooting
 If the ``deepspeed`` process gets killed at launch time without a traceback, that usually means that the program tried
 to allocate more CPU memory than your system has or your process is allowed to allocate and the OS kernel killed that
 process. This is because your configuration file most likely has either ``offload_optimizer`` or ``offload_param`` or
-both configured to offload to ``cpu`` (or under ZeRO-2 ``cpu_offload`` is enabled). If you have NVMe, experiment with
-offloading to NVMe if you're running under ZeRO-3.
+both configured to offload to ``cpu``. If you have NVMe, experiment with offloading to NVMe if you're running under
+ZeRO-3.
 
 Work is being done to enable estimating how much memory is needed for a specific model: `PR
 <https://github.com/microsoft/DeepSpeed/pull/965>`__.
@@ -1569,7 +1664,7 @@ Notes
 Non-Trainer Deepspeed Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :class:`~transformers.integrations.HfDeepSpeedConfig` is used to integrate Deepspeed into the 🤗 Transformer core
+The :class:`~transformers.integrations.HfDeepSpeedConfig` is used to integrate Deepspeed into the 🤗 Transformers core
 functionality, when :class:`~transformers.Trainer` is not used.
 
 When using :class:`~transformers.Trainer` everything is automatically taken care of.
