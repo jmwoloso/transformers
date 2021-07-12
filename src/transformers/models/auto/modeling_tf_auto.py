@@ -101,6 +101,7 @@ from ..funnel.modeling_tf_funnel import (
     TFFunnelModel,
 )
 from ..gpt2.modeling_tf_gpt2 import TFGPT2ForSequenceClassification, TFGPT2LMHeadModel, TFGPT2Model
+from ..hubert.modeling_tf_hubert import TFHubertModel
 from ..layoutlm.modeling_tf_layoutlm import (
     TFLayoutLMForMaskedLM,
     TFLayoutLMForSequenceClassification,
@@ -163,6 +164,7 @@ from ..transfo_xl.modeling_tf_transfo_xl import (
     TFTransfoXLLMHeadModel,
     TFTransfoXLModel,
 )
+from ..wav2vec2.modeling_tf_wav2vec2 import TFWav2Vec2Model
 from ..xlm.modeling_tf_xlm import (
     TFXLMForMultipleChoice,
     TFXLMForQuestionAnsweringSimple,
@@ -203,6 +205,7 @@ from .configuration_auto import (
     FlaubertConfig,
     FunnelConfig,
     GPT2Config,
+    HubertConfig,
     LayoutLMConfig,
     LEDConfig,
     LongformerConfig,
@@ -218,6 +221,7 @@ from .configuration_auto import (
     RoFormerConfig,
     T5Config,
     TransfoXLConfig,
+    Wav2Vec2Config,
     XLMConfig,
     XLMRobertaConfig,
     XLNetConfig,
@@ -263,6 +267,8 @@ TF_MODEL_MAPPING = OrderedDict(
         (PegasusConfig, TFPegasusModel),
         (BlenderbotConfig, TFBlenderbotModel),
         (BlenderbotSmallConfig, TFBlenderbotSmallModel),
+        (Wav2Vec2Config, TFWav2Vec2Model),
+        (HubertConfig, TFHubertModel),
     ]
 )
 
