@@ -1,0 +1,683 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.12, pytest-6.2.5, py-1.10.0, pluggy-1.0.0 -- /home/jason/.virtualenvs/hf_dev/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('/home/jason/source/python/transformers/.hypothesis/examples')
+rootdir: /home/jason/source/python/transformers, configfile: setup.cfg
+plugins: timeout-1.4.2, forked-1.3.0, xdist-2.3.0, hypothesis-6.39.4, dash-1.21.0
+collecting ... collected 6 items
+
+src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMaskedLM.__call__ FAILED
+src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMultipleChoice.__call__ FAILED
+src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__ FAILED
+src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForSequenceClassification.__call__ FAILED
+src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForTokenClassification.__call__ FAILED
+src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertModel.__call__ FAILED
+
+=================================== FAILURES ===================================
+_ [doctest] transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMaskedLM.__call__ _
+567           Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+568           heads.
+569   
+570     Example:
+571 
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForMaskedLM
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+UNEXPECTED EXCEPTION: AttributeError("'Config' object has no attribute 'jax_enable_custom_prng'")
+Traceback (most recent call last):
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMaskedLM.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1171, in init
+    _, v_out = self.init_with_output(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1140, in init_with_output
+    return self.apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1107, in apply
+    return apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 797, in wrapper
+    with bind(variables, rngs=rngs, mutable=mutable).temporary() as root:
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 773, in bind
+    if rngs is not None and not _is_valid_rngs(rngs):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 892, in _is_valid_rngs
+    if not _is_valid_rng(val):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+jax._src.traceback_util.UnfilteredStackTrace: AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+
+The stack trace below excludes JAX-internal frames.
+The preceding is the original exception that occurred, unmodified.
+
+--------------------
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMaskedLM.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:576: UnexpectedException
+571 
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForMaskedLM
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+577 
+578     >>> inputs = tokenizer("The capital of France is [MASK].", return_tensors="jax")
+579 
+580     >>> outputs = model(**inputs)
+UNEXPECTED EXCEPTION: NameError("name 'model' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMaskedLM.__call__[4]>", line 1, in <module>
+NameError: name 'model' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:580: UnexpectedException
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForMaskedLM
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+577 
+578     >>> inputs = tokenizer("The capital of France is [MASK].", return_tensors="jax")
+579 
+580     >>> outputs = model(**inputs)
+581     >>> logits = outputs.logits
+UNEXPECTED EXCEPTION: NameError("name 'outputs' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMaskedLM.__call__[5]>", line 1, in <module>
+NameError: name 'outputs' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:581: UnexpectedException
+_ [doctest] transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMultipleChoice.__call__ _
+569           Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+570           heads.
+571   
+572     Example:
+573 
+574     ```python
+575     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForMultipleChoice
+576 
+577     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+578     >>> model = FlaxDistilBertForMultipleChoice.from_pretrained("distilbert-base-uncased")
+UNEXPECTED EXCEPTION: AttributeError("'Config' object has no attribute 'jax_enable_custom_prng'")
+Traceback (most recent call last):
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMultipleChoice.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1171, in init
+    _, v_out = self.init_with_output(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1140, in init_with_output
+    return self.apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1107, in apply
+    return apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 797, in wrapper
+    with bind(variables, rngs=rngs, mutable=mutable).temporary() as root:
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 773, in bind
+    if rngs is not None and not _is_valid_rngs(rngs):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 892, in _is_valid_rngs
+    if not _is_valid_rng(val):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+jax._src.traceback_util.UnfilteredStackTrace: AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+
+The stack trace below excludes JAX-internal frames.
+The preceding is the original exception that occurred, unmodified.
+
+--------------------
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMultipleChoice.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:578: UnexpectedException
+576 
+577     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+578     >>> model = FlaxDistilBertForMultipleChoice.from_pretrained("distilbert-base-uncased")
+579 
+580     >>> prompt = "In Italy, pizza served in formal settings, such as at a restaurant, is presented unsliced."
+581     >>> choice0 = "It is eaten with a fork and a knife."
+582     >>> choice1 = "It is eaten while held in the hand."
+583 
+584     >>> encoding = tokenizer([prompt, prompt], [choice0, choice1], return_tensors="jax", padding=True)
+585     >>> outputs = model(**{k: v[None, :] for k, v in encoding.items()})
+UNEXPECTED EXCEPTION: NameError("name 'model' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMultipleChoice.__call__[7]>", line 1, in <module>
+NameError: name 'model' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:585: UnexpectedException
+578     >>> model = FlaxDistilBertForMultipleChoice.from_pretrained("distilbert-base-uncased")
+579 
+580     >>> prompt = "In Italy, pizza served in formal settings, such as at a restaurant, is presented unsliced."
+581     >>> choice0 = "It is eaten with a fork and a knife."
+582     >>> choice1 = "It is eaten while held in the hand."
+583 
+584     >>> encoding = tokenizer([prompt, prompt], [choice0, choice1], return_tensors="jax", padding=True)
+585     >>> outputs = model(**{k: v[None, :] for k, v in encoding.items()})
+586 
+587     >>> logits = outputs.logits
+UNEXPECTED EXCEPTION: NameError("name 'outputs' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMultipleChoice.__call__[8]>", line 1, in <module>
+NameError: name 'outputs' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:587: UnexpectedException
+_ [doctest] transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__ _
+568           Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+569           heads.
+570   
+571     Example:
+572 
+573     ```python
+574     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForQuestionAnswering
+575 
+576     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+577     >>> model = FlaxDistilBertForQuestionAnswering.from_pretrained("distilbert-base-uncased")
+UNEXPECTED EXCEPTION: AttributeError("'Config' object has no attribute 'jax_enable_custom_prng'")
+Traceback (most recent call last):
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1171, in init
+    _, v_out = self.init_with_output(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1140, in init_with_output
+    return self.apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1107, in apply
+    return apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 797, in wrapper
+    with bind(variables, rngs=rngs, mutable=mutable).temporary() as root:
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 773, in bind
+    if rngs is not None and not _is_valid_rngs(rngs):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 892, in _is_valid_rngs
+    if not _is_valid_rng(val):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+jax._src.traceback_util.UnfilteredStackTrace: AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+
+The stack trace below excludes JAX-internal frames.
+The preceding is the original exception that occurred, unmodified.
+
+--------------------
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:577: UnexpectedException
+573     ```python
+574     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForQuestionAnswering
+575 
+576     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+577     >>> model = FlaxDistilBertForQuestionAnswering.from_pretrained("distilbert-base-uncased")
+578 
+579     >>> question, text = "Who was Jim Henson?", "Jim Henson was a nice puppet"
+580     >>> inputs = tokenizer(question, text, return_tensors="jax")
+581 
+582     >>> outputs = model(**inputs)
+UNEXPECTED EXCEPTION: NameError("name 'model' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__[5]>", line 1, in <module>
+NameError: name 'model' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:582: UnexpectedException
+574     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForQuestionAnswering
+575 
+576     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+577     >>> model = FlaxDistilBertForQuestionAnswering.from_pretrained("distilbert-base-uncased")
+578 
+579     >>> question, text = "Who was Jim Henson?", "Jim Henson was a nice puppet"
+580     >>> inputs = tokenizer(question, text, return_tensors="jax")
+581 
+582     >>> outputs = model(**inputs)
+583     >>> start_scores = outputs.start_logits
+UNEXPECTED EXCEPTION: NameError("name 'outputs' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__[6]>", line 1, in <module>
+NameError: name 'outputs' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:583: UnexpectedException
+575 
+576     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+577     >>> model = FlaxDistilBertForQuestionAnswering.from_pretrained("distilbert-base-uncased")
+578 
+579     >>> question, text = "Who was Jim Henson?", "Jim Henson was a nice puppet"
+580     >>> inputs = tokenizer(question, text, return_tensors="jax")
+581 
+582     >>> outputs = model(**inputs)
+583     >>> start_scores = outputs.start_logits
+584     >>> end_scores = outputs.end_logits
+UNEXPECTED EXCEPTION: NameError("name 'outputs' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__[7]>", line 1, in <module>
+NameError: name 'outputs' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:584: UnexpectedException
+_ [doctest] transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForSequenceClassification.__call__ _
+567           Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+568           heads.
+569   
+570     Example:
+571 
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForSequenceClassification
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
+UNEXPECTED EXCEPTION: AttributeError("'Config' object has no attribute 'jax_enable_custom_prng'")
+Traceback (most recent call last):
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForSequenceClassification.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1171, in init
+    _, v_out = self.init_with_output(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1140, in init_with_output
+    return self.apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1107, in apply
+    return apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 797, in wrapper
+    with bind(variables, rngs=rngs, mutable=mutable).temporary() as root:
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 773, in bind
+    if rngs is not None and not _is_valid_rngs(rngs):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 892, in _is_valid_rngs
+    if not _is_valid_rng(val):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+jax._src.traceback_util.UnfilteredStackTrace: AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+
+The stack trace below excludes JAX-internal frames.
+The preceding is the original exception that occurred, unmodified.
+
+--------------------
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForSequenceClassification.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:576: UnexpectedException
+571 
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForSequenceClassification
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
+577 
+578     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="jax")
+579 
+580     >>> outputs = model(**inputs)
+UNEXPECTED EXCEPTION: NameError("name 'model' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForSequenceClassification.__call__[4]>", line 1, in <module>
+NameError: name 'model' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:580: UnexpectedException
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForSequenceClassification
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
+577 
+578     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="jax")
+579 
+580     >>> outputs = model(**inputs)
+581     >>> logits = outputs.logits
+UNEXPECTED EXCEPTION: NameError("name 'outputs' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForSequenceClassification.__call__[5]>", line 1, in <module>
+NameError: name 'outputs' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:581: UnexpectedException
+_ [doctest] transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForTokenClassification.__call__ _
+567           Attentions weights after the attention softmax, used to compute the weighted average in the self-attention
+568           heads.
+569   
+570     Example:
+571 
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForTokenClassification
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForTokenClassification.from_pretrained("distilbert-base-uncased")
+UNEXPECTED EXCEPTION: AttributeError("'Config' object has no attribute 'jax_enable_custom_prng'")
+Traceback (most recent call last):
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForTokenClassification.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1171, in init
+    _, v_out = self.init_with_output(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1140, in init_with_output
+    return self.apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1107, in apply
+    return apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 797, in wrapper
+    with bind(variables, rngs=rngs, mutable=mutable).temporary() as root:
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 773, in bind
+    if rngs is not None and not _is_valid_rngs(rngs):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 892, in _is_valid_rngs
+    if not _is_valid_rng(val):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+jax._src.traceback_util.UnfilteredStackTrace: AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+
+The stack trace below excludes JAX-internal frames.
+The preceding is the original exception that occurred, unmodified.
+
+--------------------
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForTokenClassification.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:576: UnexpectedException
+571 
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForTokenClassification
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForTokenClassification.from_pretrained("distilbert-base-uncased")
+577 
+578     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="jax")
+579 
+580     >>> outputs = model(**inputs)
+UNEXPECTED EXCEPTION: NameError("name 'model' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForTokenClassification.__call__[4]>", line 1, in <module>
+NameError: name 'model' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:580: UnexpectedException
+572     ```python
+573     >>> from transformers import DistilBertTokenizer, FlaxDistilBertForTokenClassification
+574 
+575     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+576     >>> model = FlaxDistilBertForTokenClassification.from_pretrained("distilbert-base-uncased")
+577 
+578     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="jax")
+579 
+580     >>> outputs = model(**inputs)
+581     >>> logits = outputs.logits
+UNEXPECTED EXCEPTION: NameError("name 'outputs' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForTokenClassification.__call__[5]>", line 1, in <module>
+NameError: name 'outputs' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:581: UnexpectedException
+_ [doctest] transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertModel.__call__ _
+551         return_dict (`bool`, *optional*):
+552             Whether or not to return a [`~file_utils.ModelOutput`] instead of a plain tuple.
+553 
+554     Example:
+555 
+556     ```python
+557     >>> from transformers import DistilBertTokenizer, FlaxDistilBertModel
+558 
+559     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+560     >>> model = FlaxDistilBertModel.from_pretrained("distilbert-base-uncased")
+UNEXPECTED EXCEPTION: AttributeError("'Config' object has no attribute 'jax_enable_custom_prng'")
+Traceback (most recent call last):
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertModel.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1171, in init
+    _, v_out = self.init_with_output(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1140, in init_with_output
+    return self.apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/jax/_src/traceback_util.py", line 162, in reraise_with_filtered_traceback
+    return fun(*args, **kwargs)
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/linen/module.py", line 1107, in apply
+    return apply(
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 797, in wrapper
+    with bind(variables, rngs=rngs, mutable=mutable).temporary() as root:
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 773, in bind
+    if rngs is not None and not _is_valid_rngs(rngs):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 892, in _is_valid_rngs
+    if not _is_valid_rng(val):
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+jax._src.traceback_util.UnfilteredStackTrace: AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+
+The stack trace below excludes JAX-internal frames.
+The preceding is the original exception that occurred, unmodified.
+
+--------------------
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertModel.__call__[2]>", line 1, in <module>
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 558, in from_pretrained
+    model = cls(config, *model_args, **model_kwargs)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 434, in __init__
+    super().__init__(config, module, input_shape=input_shape, seed=seed, dtype=dtype)
+  File "/home/jason/source/python/transformers/src/transformers/modeling_flax_utils.py", line 116, in __init__
+    random_params = self.init_weights(self.key, input_shape)
+  File "/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py", line 444, in init_weights
+    return self.module.init(rngs, input_ids, attention_mask, return_dict=False)["params"]
+  File "/home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/flax/core/scope.py", line 873, in _is_valid_rng
+    if jax_config.jax_enable_custom_prng:
+AttributeError: 'Config' object has no attribute 'jax_enable_custom_prng'
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:560: UnexpectedException
+554     Example:
+555 
+556     ```python
+557     >>> from transformers import DistilBertTokenizer, FlaxDistilBertModel
+558 
+559     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+560     >>> model = FlaxDistilBertModel.from_pretrained("distilbert-base-uncased")
+561 
+562     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="jax")
+563     >>> outputs = model(**inputs)
+UNEXPECTED EXCEPTION: NameError("name 'model' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertModel.__call__[4]>", line 1, in <module>
+NameError: name 'model' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:563: UnexpectedException
+556     ```python
+557     >>> from transformers import DistilBertTokenizer, FlaxDistilBertModel
+558 
+559     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+560     >>> model = FlaxDistilBertModel.from_pretrained("distilbert-base-uncased")
+561 
+562     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="jax")
+563     >>> outputs = model(**inputs)
+564 
+565     >>> last_hidden_states = outputs.last_hidden_state
+UNEXPECTED EXCEPTION: NameError("name 'outputs' is not defined")
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertModel.__call__[5]>", line 1, in <module>
+NameError: name 'outputs' is not defined
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_flax_distilbert.py:565: UnexpectedException
+=============================== warnings summary ===============================
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:585
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:585: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:627
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:627: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:637
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:637: DeprecationWarning: `np.bool` is a deprecated alias for the builtin `bool`. To silence this warning, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.bool,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:108
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:108: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object:
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:110
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:110: DeprecationWarning: `np.bool` is a deprecated alias for the builtin `bool`. To silence this warning, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.bool:
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/ops/numpy_ops/np_random.py:110
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/ops/numpy_ops/np_random.py:110: DeprecationWarning: `np.int` is a deprecated alias for the builtin `int`. To silence this warning, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    def randint(low, high=None, size=None, dtype=onp.int):  # pylint: disable=missing-function-docstring
+
+src/transformers/dynamic_module_utils.py:81
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:81: DeprecationWarning: invalid escape sequence \s
+    relative_imports = re.findall("^\s*import\s+\.(\S+)\s*$", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:83
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:83: DeprecationWarning: invalid escape sequence \s
+    relative_imports += re.findall("^\s*from\s+\.(\S+)\s+import", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:125
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:125: DeprecationWarning: invalid escape sequence \s
+    imports = re.findall("^\s*import\s+(\S+)\s*$", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:127
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:127: DeprecationWarning: invalid escape sequence \s
+    imports += re.findall("^\s*from\s+(\S+)\s+import", content, flags=re.MULTILINE)
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMaskedLM.__call__
+FAILED src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForMultipleChoice.__call__
+FAILED src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForQuestionAnswering.__call__
+FAILED src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForSequenceClassification.__call__
+FAILED src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertForTokenClassification.__call__
+FAILED src/transformers/models/distilbert/modeling_flax_distilbert.py::transformers.models.distilbert.modeling_flax_distilbert.FlaxDistilBertModel.__call__
+======================= 6 failed, 10 warnings in 52.05s ========================

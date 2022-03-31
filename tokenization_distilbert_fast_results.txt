@@ -1,0 +1,57 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.12, pytest-6.2.5, py-1.10.0, pluggy-1.0.0 -- /home/jason/.virtualenvs/hf_dev/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('/home/jason/source/python/transformers/.hypothesis/examples')
+rootdir: /home/jason/source/python/transformers, configfile: setup.cfg
+plugins: timeout-1.4.2, forked-1.3.0, xdist-2.3.0, hypothesis-6.39.4, dash-1.21.0
+collecting ... collected 0 items
+
+=============================== warnings summary ===============================
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:585
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:585: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:627
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:627: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:637
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:637: DeprecationWarning: `np.bool` is a deprecated alias for the builtin `bool`. To silence this warning, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.bool,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:108
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:108: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object:
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:110
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:110: DeprecationWarning: `np.bool` is a deprecated alias for the builtin `bool`. To silence this warning, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.bool:
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/ops/numpy_ops/np_random.py:110
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/ops/numpy_ops/np_random.py:110: DeprecationWarning: `np.int` is a deprecated alias for the builtin `int`. To silence this warning, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    def randint(low, high=None, size=None, dtype=onp.int):  # pylint: disable=missing-function-docstring
+
+src/transformers/dynamic_module_utils.py:81
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:81: DeprecationWarning: invalid escape sequence \s
+    relative_imports = re.findall("^\s*import\s+\.(\S+)\s*$", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:83
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:83: DeprecationWarning: invalid escape sequence \s
+    relative_imports += re.findall("^\s*from\s+\.(\S+)\s+import", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:125
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:125: DeprecationWarning: invalid escape sequence \s
+    imports = re.findall("^\s*import\s+(\S+)\s*$", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:127
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:127: DeprecationWarning: invalid escape sequence \s
+    imports += re.findall("^\s*from\s+(\S+)\s+import", content, flags=re.MULTILINE)
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+============================= 10 warnings in 0.68s =============================
