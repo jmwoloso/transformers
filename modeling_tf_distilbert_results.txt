@@ -1,0 +1,106 @@
+============================= test session starts ==============================
+platform linux -- Python 3.8.12, pytest-6.2.5, py-1.10.0, pluggy-1.0.0 -- /home/jason/.virtualenvs/hf_dev/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('/home/jason/source/python/transformers/.hypothesis/examples')
+rootdir: /home/jason/source/python/transformers, configfile: setup.cfg
+plugins: timeout-1.4.2, forked-1.3.0, xdist-2.3.0, hypothesis-6.39.4, dash-1.21.0
+collecting ... collected 6 items
+
+src/transformers/models/distilbert/modeling_tf_distilbert.py::transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForMaskedLM.call PASSED
+src/transformers/models/distilbert/modeling_tf_distilbert.py::transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForMultipleChoice.call PASSED
+src/transformers/models/distilbert/modeling_tf_distilbert.py::transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForQuestionAnswering.call PASSED
+src/transformers/models/distilbert/modeling_tf_distilbert.py::transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForSequenceClassification.call PASSED
+src/transformers/models/distilbert/modeling_tf_distilbert.py::transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForTokenClassification.call FAILED
+src/transformers/models/distilbert/modeling_tf_distilbert.py::transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertModel.call PASSED
+
+=================================== FAILURES ===================================
+_ [doctest] transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForTokenClassification.call _
+946     ```python
+947     >>> from transformers import DistilBertTokenizer, TFDistilBertForTokenClassification
+948     >>> import tensorflow as tf
+949 
+950     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+951     >>> model = TFDistilBertForTokenClassification.from_pretrained("distilbert-base-uncased")
+952 
+953     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="tf")
+954     >>> input_ids = inputs["input_ids"]
+955     >>> inputs["labels"] = tf.reshape(
+UNEXPECTED EXCEPTION: SyntaxError('unexpected EOF while parsing', ('<doctest transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForTokenClassification.call[6]>', 2, 76, '    tf.constant([1] * tf.size(input_ids).numpy()), (-1, tf.size(input_ids))\n'))
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForTokenClassification.call[6]>", line 2
+    tf.constant([1] * tf.size(input_ids).numpy()), (-1, tf.size(input_ids))
+                                                                          ^
+SyntaxError: unexpected EOF while parsing
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_tf_distilbert.py:955: UnexpectedException
+948     >>> import tensorflow as tf
+949 
+950     >>> tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+951     >>> model = TFDistilBertForTokenClassification.from_pretrained("distilbert-base-uncased")
+952 
+953     >>> inputs = tokenizer("Hello, my dog is cute", return_tensors="tf")
+954     >>> input_ids = inputs["input_ids"]
+955     >>> inputs["labels"] = tf.reshape(
+956     ...     tf.constant([1] * tf.size(input_ids).numpy()), (-1, tf.size(input_ids))
+957     >>> )  # Batch size 1
+UNEXPECTED EXCEPTION: SyntaxError("unmatched ')'", ('<doctest transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForTokenClassification.call[7]>', 1, 1, ')  # Batch size 1'))
+Traceback (most recent call last):
+  File "/usr/local/jason/python/python3812/lib/python3.8/doctest.py", line 1336, in __run
+    exec(compile(example.source, filename, "single",
+  File "<doctest transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForTokenClassification.call[7]>", line 1
+    )  # Batch size 1
+    ^
+SyntaxError: unmatched ')'
+/home/jason/source/python/transformers/src/transformers/models/distilbert/modeling_tf_distilbert.py:957: UnexpectedException
+=============================== warnings summary ===============================
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:585
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:585: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:627
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:627: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:637
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/dtypes.py:637: DeprecationWarning: `np.bool` is a deprecated alias for the builtin `bool`. To silence this warning, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.bool,
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:108
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:108: DeprecationWarning: `np.object` is a deprecated alias for the builtin `object`. To silence this warning, use `object` by itself. Doing this will not modify any behavior and is safe. 
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.object:
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:110
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/framework/tensor_util.py:110: DeprecationWarning: `np.bool` is a deprecated alias for the builtin `bool`. To silence this warning, use `bool` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.bool_` here.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    np.bool:
+
+../../../.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/ops/numpy_ops/np_random.py:110
+  /home/jason/.virtualenvs/hf_dev/lib/python3.8/site-packages/tensorflow/python/ops/numpy_ops/np_random.py:110: DeprecationWarning: `np.int` is a deprecated alias for the builtin `int`. To silence this warning, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
+  Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+    def randint(low, high=None, size=None, dtype=onp.int):  # pylint: disable=missing-function-docstring
+
+src/transformers/dynamic_module_utils.py:81
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:81: DeprecationWarning: invalid escape sequence \s
+    relative_imports = re.findall("^\s*import\s+\.(\S+)\s*$", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:83
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:83: DeprecationWarning: invalid escape sequence \s
+    relative_imports += re.findall("^\s*from\s+\.(\S+)\s+import", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:125
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:125: DeprecationWarning: invalid escape sequence \s
+    imports = re.findall("^\s*import\s+(\S+)\s*$", content, flags=re.MULTILINE)
+
+src/transformers/dynamic_module_utils.py:127
+  /home/jason/source/python/transformers/src/transformers/dynamic_module_utils.py:127: DeprecationWarning: invalid escape sequence \s
+    imports += re.findall("^\s*from\s+(\S+)\s+import", content, flags=re.MULTILINE)
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED src/transformers/models/distilbert/modeling_tf_distilbert.py::transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertForTokenClassification.call
+============= 1 failed, 5 passed, 10 warnings in 82.84s (0:01:22) ==============
