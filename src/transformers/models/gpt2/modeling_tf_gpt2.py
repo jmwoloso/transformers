@@ -40,7 +40,7 @@ from ...modeling_tf_utils import (
     keras_serializable,
     unpack_inputs,
 )
-from ...tf_utils import shape_list
+from ...tf_utils import shape_list, stable_softmax
 from ...utils import (
     DUMMY_INPUTS,
     ModelOutput,
@@ -129,7 +129,7 @@ class TFAttention(tf.keras.layers.Layer):
             attention_mask = tf.cast(attention_mask, dtype=w.dtype)
             w = w + attention_mask
 
-        w = tf.nn.softmax(w, axis=-1)
+        w = stable_softmax(w, axis=-1)
         w = self.attn_dropout(w, training=training)
 
         # Mask heads if we want to
@@ -654,6 +654,10 @@ GPT2_INPUTS_DOCSTRING = r"""
 
             - 1 for tokens that are **not masked**,
             - 0 for tokens that are **masked**.
+
+            If `past_key_values` is used, `attention_mask` needs to contain the masking strategy that was used for
+            `past_key_values`. In other words, the `attention_mask` always has to have the length:
+            `len(past_key_values) + len(input_ids)`
 
             [What are attention masks?](../glossary#attention-mask)
         token_type_ids (`tf.Tensor` or `Numpy array` of shape `(batch_size, sequence_length)`, *optional*):
