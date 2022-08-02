@@ -318,32 +318,28 @@ class FeatureExtractionMixin(PushToHubMixin):
             save_directory (`str` or `os.PathLike`):
                 Directory where the feature extractor JSON file will be saved (will be created if it does not exist).
             push_to_hub (`bool`, *optional*, defaults to `False`):
-                Whether or not to push your feature extractor to the Hugging Face model hub after saving it.
-
-                <Tip warning={true}>
-
-                Using `push_to_hub=True` will synchronize the repository you are pushing to with `save_directory`,
-                which requires `save_directory` to be a local clone of the repo you are pushing to if it's an existing
-                folder. Pass along `temp_dir=True` to use a temporary directory instead.
-
-                </Tip>
-
+                Whether or not to push your model to the Hugging Face model hub after saving it. You can specify the
+                repository you want to push to with `repo_id` (will default to the name of `save_directory` in your
+                namespace).
             kwargs:
                 Additional key word arguments passed along to the [`~utils.PushToHubMixin.push_to_hub`] method.
         """
         if os.path.isfile(save_directory):
             raise AssertionError(f"Provided path ({save_directory}) should be a directory, not a file")
 
+        os.makedirs(save_directory, exist_ok=True)
+
         if push_to_hub:
             commit_message = kwargs.pop("commit_message", None)
-            repo = self._create_or_get_repo(save_directory, **kwargs)
+            repo_id = kwargs.pop("repo_id", save_directory.split(os.path.sep)[-1])
+            repo_id, token = self._create_repo(repo_id, **kwargs)
+            files_timestamps = self._get_files_timestamps(save_directory)
 
         # If we have a custom config, we copy the file defining it in the folder and set the attributes so it can be
         # loaded from the Hub.
         if self._auto_class is not None:
             custom_object_save(self, save_directory, config=self)
 
-        os.makedirs(save_directory, exist_ok=True)
         # If we save using the predefined names, we can load using `from_pretrained`
         output_feature_extractor_file = os.path.join(save_directory, FEATURE_EXTRACTOR_NAME)
 
@@ -351,8 +347,11 @@ class FeatureExtractionMixin(PushToHubMixin):
         logger.info(f"Feature extractor saved in {output_feature_extractor_file}")
 
         if push_to_hub:
-            url = self._push_to_hub(repo, commit_message=commit_message)
-            logger.info(f"Feature extractor pushed to the hub in this commit: {url}")
+            self._upload_modified_files(
+                save_directory, repo_id, files_timestamps, commit_message=commit_message, token=token
+            )
+
+        return [output_feature_extractor_file]
 
     @classmethod
     def get_feature_extractor_dict(
@@ -434,10 +433,11 @@ class FeatureExtractionMixin(PushToHubMixin):
             )
         except ValueError:
             raise EnvironmentError(
-                f"We couldn't connect to '{HUGGINGFACE_CO_RESOLVE_ENDPOINT}' to load this model, couldn't find it in the cached "
-                f"files and it looks like {pretrained_model_name_or_path} is not the path to a directory containing a "
-                f"{FEATURE_EXTRACTOR_NAME} file.\nCheckout your internet connection or see how to run the library in "
-                "offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'."
+                f"We couldn't connect to '{HUGGINGFACE_CO_RESOLVE_ENDPOINT}' to load this model, couldn't find it in"
+                f" the cached files and it looks like {pretrained_model_name_or_path} is not the path to a directory"
+                f" containing a {FEATURE_EXTRACTOR_NAME} file.\nCheckout your internet connection or see how to run"
+                " the library in offline mode at"
+                " 'https://huggingface.co/docs/transformers/installation#offline-mode'."
             )
         except EnvironmentError:
             raise EnvironmentError(
@@ -462,7 +462,8 @@ class FeatureExtractionMixin(PushToHubMixin):
             logger.info(f"loading feature extractor configuration file {feature_extractor_file}")
         else:
             logger.info(
-                f"loading feature extractor configuration file {feature_extractor_file} from cache at {resolved_feature_extractor_file}"
+                f"loading feature extractor configuration file {feature_extractor_file} from cache at"
+                f" {resolved_feature_extractor_file}"
             )
 
         return feature_extractor_dict, kwargs

@@ -36,11 +36,13 @@ from zipfile import ZipFile, is_zipfile
 
 import requests
 from filelock import FileLock
-from huggingface_hub import HfFolder, Repository, create_repo, list_repo_files, whoami
+from huggingface_hub import CommitOperationAdd, HfFolder, create_commit, create_repo, list_repo_files, whoami
 from requests.exceptions import HTTPError
+from requests.models import Response
 from transformers.utils.logging import tqdm
 
 from . import __version__, logging
+from .generic import working_or_temp_dir
 from .import_utils import (
     ENV_VARS_TRUE_VALUES,
     _tf_version,
@@ -77,11 +79,11 @@ if (
     and "TRANSFORMERS_CACHE" not in os.environ
 ):
     logger.warning(
-        "In Transformers v4.0.0, the default path to cache downloaded models changed from "
-        "'~/.cache/torch/transformers' to '~/.cache/huggingface/transformers'. Since you don't seem to have overridden "
-        "and '~/.cache/torch/transformers' is a directory that exists, we're moving it to "
-        "'~/.cache/huggingface/transformers' to avoid redownloading models you have already in the cache. You should "
-        "only see this message once."
+        "In Transformers v4.0.0, the default path to cache downloaded models changed from"
+        " '~/.cache/torch/transformers' to '~/.cache/huggingface/transformers'. Since you don't seem to have"
+        " overridden and '~/.cache/torch/transformers' is a directory that exists, we're moving it to"
+        " '~/.cache/huggingface/transformers' to avoid redownloading models you have already in the cache. You should"
+        " only see this message once."
     )
     shutil.move(old_default_cache_path, default_cache_path)
 
@@ -97,7 +99,7 @@ S3_BUCKET_PREFIX = "https://s3.amazonaws.com/models.huggingface.co/bert"
 CLOUDFRONT_DISTRIB_PREFIX = "https://cdn.huggingface.co"
 
 _staging_mode = os.environ.get("HUGGINGFACE_CO_STAGING", "NO").upper() in ENV_VARS_TRUE_VALUES
-_default_endpoint = "https://moon-staging.huggingface.co" if _staging_mode else "https://huggingface.co"
+_default_endpoint = "https://hub-ci.huggingface.co" if _staging_mode else "https://huggingface.co"
 
 HUGGINGFACE_CO_RESOLVE_ENDPOINT = _default_endpoint
 if os.environ.get("HUGGINGFACE_CO_RESOLVE_ENDPOINT", None) is not None:
@@ -109,6 +111,7 @@ if os.environ.get("HUGGINGFACE_CO_RESOLVE_ENDPOINT", None) is not None:
     HUGGINGFACE_CO_RESOLVE_ENDPOINT = os.environ.get("HUGGINGFACE_CO_RESOLVE_ENDPOINT", None)
 HUGGINGFACE_CO_RESOLVE_ENDPOINT = os.environ.get("HF_ENDPOINT", HUGGINGFACE_CO_RESOLVE_ENDPOINT)
 HUGGINGFACE_CO_PREFIX = HUGGINGFACE_CO_RESOLVE_ENDPOINT + "/{model_id}/resolve/{revision}/{filename}"
+HUGGINGFACE_CO_EXAMPLES_TELEMETRY = HUGGINGFACE_CO_RESOLVE_ENDPOINT + "/api/telemetry/examples"
 
 
 def is_remote_url(url_or_filename):
@@ -397,23 +400,37 @@ class RevisionNotFoundError(HTTPError):
     """Raised when trying to access a hf.co URL with a valid repository but an invalid revision."""
 
 
-def _raise_for_status(request):
+def _raise_for_status(response: Response):
     """
     Internal version of `request.raise_for_status()` that will refine a potential HTTPError.
     """
-    if "X-Error-Code" in request.headers:
-        error_code = request.headers["X-Error-Code"]
+    if "X-Error-Code" in response.headers:
+        error_code = response.headers["X-Error-Code"]
         if error_code == "RepoNotFound":
-            raise RepositoryNotFoundError(f"404 Client Error: Repository Not Found for url: {request.url}")
+            raise RepositoryNotFoundError(f"404 Client Error: Repository Not Found for url: {response.url}")
         elif error_code == "EntryNotFound":
-            raise EntryNotFoundError(f"404 Client Error: Entry Not Found for url: {request.url}")
+            raise EntryNotFoundError(f"404 Client Error: Entry Not Found for url: {response.url}")
         elif error_code == "RevisionNotFound":
-            raise RevisionNotFoundError((f"404 Client Error: Revision Not Found for url: {request.url}"))
+            raise RevisionNotFoundError(f"404 Client Error: Revision Not Found for url: {response.url}")
 
-    request.raise_for_status()
+    if response.status_code == 401:
+        # The repo was not found and the user is not Authenticated
+        raise RepositoryNotFoundError(
+            f"401 Client Error: Repository not found for url: {response.url}. "
+            "If the repo is private, make sure you are authenticated."
+        )
+
+    response.raise_for_status()
 
 
-def http_get(url: str, temp_file: BinaryIO, proxies=None, resume_size=0, headers: Optional[Dict[str, str]] = None):
+def http_get(
+    url: str,
+    temp_file: BinaryIO,
+    proxies=None,
+    resume_size=0,
+    headers: Optional[Dict[str, str]] = None,
+    file_name: Optional[str] = None,
+):
     """
     Download remote file. Do not gobble up errors.
     """
@@ -432,7 +449,7 @@ def http_get(url: str, temp_file: BinaryIO, proxies=None, resume_size=0, headers
         unit_divisor=1024,
         total=total,
         initial=resume_size,
-        desc="Downloading",
+        desc=f"Downloading {file_name}" if file_name is not None else "Downloading",
     )
     for chunk in r.iter_content(chunk_size=1024):
         if chunk:  # filter out keep-alive new chunks
@@ -536,8 +553,9 @@ def get_from_cache(
                 # the models might've been found if local_files_only=False
                 # Notify the user about that
                 if local_files_only:
-                    raise FileNotFoundError(
-                        "Cannot find the requested files in the cached path and outgoing traffic has been"
+                    fname = url.split("/")[-1]
+                    raise EntryNotFoundError(
+                        f"Cannot find the requested file ({fname}) in the cached path and outgoing traffic has been"
                         " disabled. To enable model look-ups and downloads online, set 'local_files_only'"
                         " to False."
                     )
@@ -582,7 +600,16 @@ def get_from_cache(
         with temp_file_manager() as temp_file:
             logger.info(f"{url} not found in cache or force_download set to True, downloading to {temp_file.name}")
 
-            http_get(url_to_download, temp_file, proxies=proxies, resume_size=resume_size, headers=headers)
+            # The url_to_download might be messy, so we extract the file name from the original url.
+            file_name = url.split("/")[-1]
+            http_get(
+                url_to_download,
+                temp_file,
+                proxies=proxies,
+                resume_size=resume_size,
+                headers=headers,
+                file_name=file_name,
+            )
 
         logger.info(f"storing {url} in cache at {cache_path}")
         os.replace(temp_file.name, cache_path)
@@ -843,47 +870,122 @@ class PushToHubMixin:
     A Mixin containing the functionality to push a model or tokenizer to the hub.
     """
 
-    def push_to_hub(
+    def _create_repo(
         self,
-        repo_path_or_name: Optional[str] = None,
-        repo_url: Optional[str] = None,
-        use_temp_dir: bool = False,
-        commit_message: Optional[str] = None,
-        organization: Optional[str] = None,
+        repo_id: str,
         private: Optional[bool] = None,
         use_auth_token: Optional[Union[bool, str]] = None,
-        **model_card_kwargs
+        repo_url: Optional[str] = None,
+        organization: Optional[str] = None,
+    ):
+        """
+        Create the repo if needed, cleans up repo_id with deprecated kwards `repo_url` and `organization`, retrives the
+        token.
+        """
+        if repo_url is not None:
+            warnings.warn(
+                "The `repo_url` argument is deprecated and will be removed in v5 of Transformers. Use `repo_id` "
+                "instead."
+            )
+            repo_id = repo_url.replace(f"{HUGGINGFACE_CO_RESOLVE_ENDPOINT}/", "")
+        if organization is not None:
+            warnings.warn(
+                "The `organization` argument is deprecated and will be removed in v5 of Transformers. Set your "
+                "organization directly in the `repo_id` passed instead (`repo_id={organization}/{model_id}`)."
+            )
+            if not repo_id.startswith(organization):
+                if "/" in repo_id:
+                    repo_id = repo_id.split("/")[-1]
+                repo_id = f"{organization}/{repo_id}"
+
+        token = HfFolder.get_token() if use_auth_token is True else use_auth_token
+        url = create_repo(repo_id=repo_id, token=token, private=private, exist_ok=True)
+
+        # If the namespace is not there, add it or `upload_file` will complain
+        if "/" not in repo_id and url != f"{HUGGINGFACE_CO_RESOLVE_ENDPOINT}/{repo_id}":
+            repo_id = get_full_repo_name(repo_id, token=token)
+        return repo_id, token
+
+    def _get_files_timestamps(self, working_dir: Union[str, os.PathLike]):
+        """
+        Returns the list of files with their last modification timestamp.
+        """
+        return {f: os.path.getmtime(os.path.join(working_dir, f)) for f in os.listdir(working_dir)}
+
+    def _upload_modified_files(
+        self,
+        working_dir: Union[str, os.PathLike],
+        repo_id: str,
+        files_timestamps: Dict[str, float],
+        commit_message: Optional[str] = None,
+        token: Optional[str] = None,
+        create_pr: bool = False,
+    ):
+        """
+        Uploads all modified files in `working_dir` to `repo_id`, based on `files_timestamps`.
+        """
+        if commit_message is None:
+            if "Model" in self.__class__.__name__:
+                commit_message = "Upload model"
+            elif "Config" in self.__class__.__name__:
+                commit_message = "Upload config"
+            elif "Tokenizer" in self.__class__.__name__:
+                commit_message = "Upload tokenizer"
+            elif "FeatureExtractor" in self.__class__.__name__:
+                commit_message = "Upload feature extractor"
+            elif "Processor" in self.__class__.__name__:
+                commit_message = "Upload processor"
+            else:
+                commit_message = f"Upload {self.__class__.__name__}"
+        modified_files = [
+            f
+            for f in os.listdir(working_dir)
+            if f not in files_timestamps or os.path.getmtime(os.path.join(working_dir, f)) > files_timestamps[f]
+        ]
+        operations = []
+        for file in modified_files:
+            operations.append(CommitOperationAdd(path_or_fileobj=os.path.join(working_dir, file), path_in_repo=file))
+        logger.info(f"Uploading the following files to {repo_id}: {','.join(modified_files)}")
+        return create_commit(
+            repo_id=repo_id, operations=operations, commit_message=commit_message, token=token, create_pr=create_pr
+        )
+
+    def push_to_hub(
+        self,
+        repo_id: str,
+        use_temp_dir: Optional[bool] = None,
+        commit_message: Optional[str] = None,
+        private: Optional[bool] = None,
+        use_auth_token: Optional[Union[bool, str]] = None,
+        max_shard_size: Optional[Union[int, str]] = "10GB",
+        create_pr: bool = False,
+        **deprecated_kwargs
     ) -> str:
         """
         Upload the {object_files} to the 🤗 Model Hub while synchronizing a local clone of the repo in
         `repo_path_or_name`.
 
         Parameters:
-            repo_path_or_name (`str`, *optional*):
-                Can either be a repository name for your {object} in the Hub or a path to a local folder (in which case
-                the repository will have the name of that local folder). If not specified, will default to the name
-                given by `repo_url` and a local directory with that name will be created.
-            repo_url (`str`, *optional*):
-                Specify this in case you want to push to an existing repository in the hub. If unspecified, a new
-                repository will be created in your namespace (unless you specify an `organization`) with `repo_name`.
-            use_temp_dir (`bool`, *optional*, defaults to `False`):
-                Whether or not to clone the distant repo in a temporary directory or in `repo_path_or_name` inside the
-                current working directory. This will slow things down if you are making changes in an existing repo
-                since you will need to clone the repo before every push.
+            repo_id (`str`):
+                The name of the repository you want to push your {object} to. It should contain your organization name
+                when pushing to a given organization.
+            use_temp_dir (`bool`, *optional*):
+                Whether or not to use a temporary directory to store the files saved before they are pushed to the Hub.
+                Will default to `True` if there is no directory named like `repo_id`, `False` otherwise.
             commit_message (`str`, *optional*):
-                Message to commit while pushing. Will default to `"add {object}"`.
-            organization (`str`, *optional*):
-                Organization in which you want to push your {object} (you must be a member of this organization).
+                Message to commit while pushing. Will default to `"Upload {object}"`.
             private (`bool`, *optional*):
                 Whether or not the repository created should be private (requires a paying subscription).
             use_auth_token (`bool` or `str`, *optional*):
                 The token to use as HTTP bearer authorization for remote files. If `True`, will use the token generated
                 when running `transformers-cli login` (stored in `~/.huggingface`). Will default to `True` if
                 `repo_url` is not specified.
-
-
-        Returns:
-            `str`: The url of the commit of your {object} in the given repository.
+            max_shard_size (`int` or `str`, *optional*, defaults to `"10GB"`):
+                Only applicable for models. The maximum size for a checkpoint before being sharded. Checkpoints shard
+                will then be each of size lower than this size. If expressed as a string, needs to be digits followed
+                by a unit (like `"5MB"`).
+            create_pr (`bool`, *optional*, defaults to `False`):
+                Whether or not to create a PR with the uploaded files or directly commit.
 
         Examples:
 
@@ -892,132 +994,45 @@ class PushToHubMixin:
 
         {object} = {object_class}.from_pretrained("bert-base-cased")
 
-        # Push the {object} to your namespace with the name "my-finetuned-bert" and have a local clone in the
-        # *my-finetuned-bert* folder.
+        # Push the {object} to your namespace with the name "my-finetuned-bert".
         {object}.push_to_hub("my-finetuned-bert")
 
-        # Push the {object} to your namespace with the name "my-finetuned-bert" with no local clone.
-        {object}.push_to_hub("my-finetuned-bert", use_temp_dir=True)
-
-        # Push the {object} to an organization with the name "my-finetuned-bert" and have a local clone in the
-        # *my-finetuned-bert* folder.
-        {object}.push_to_hub("my-finetuned-bert", organization="huggingface")
-
-        # Make a change to an existing repo that has been cloned locally in *my-finetuned-bert*.
-        {object}.push_to_hub("my-finetuned-bert", repo_url="https://huggingface.co/sgugger/my-finetuned-bert")
+        # Push the {object} to an organization with the name "my-finetuned-bert".
+        {object}.push_to_hub("huggingface/my-finetuned-bert")
         ```
         """
-        if use_temp_dir:
-            # Make sure we use the right `repo_name` for the `repo_url` before replacing it.
-            if repo_url is None:
-                if use_auth_token is None:
-                    use_auth_token = True
-                repo_name = Path(repo_path_or_name).name
-                repo_url = self._get_repo_url_from_name(
-                    repo_name, organization=organization, private=private, use_auth_token=use_auth_token
-                )
-            repo_path_or_name = tempfile.mkdtemp()
-
-        # Create or clone the repo. If the repo is already cloned, this just retrieves the path to the repo.
-        repo = self._create_or_get_repo(
-            repo_path_or_name=repo_path_or_name,
-            repo_url=repo_url,
-            organization=organization,
-            private=private,
-            use_auth_token=use_auth_token,
-        )
-        # Save the files in the cloned repo
-        self.save_pretrained(repo_path_or_name)
-        if hasattr(self, "history") and hasattr(self, "create_model_card"):
-            # This is a Keras model and we might be able to fish out its History and make a model card out of it
-            base_model_card_args = {
-                "output_dir": repo_path_or_name,
-                "model_name": Path(repo_path_or_name).name,
-            }
-            base_model_card_args.update(model_card_kwargs)
-            self.create_model_card(**base_model_card_args)
-        # Commit and push!
-        url = self._push_to_hub(repo, commit_message=commit_message)
-
-        # Clean up! Clean up! Everybody everywhere!
-        if use_temp_dir:
-            shutil.rmtree(repo_path_or_name)
-
-        return url
-
-    @staticmethod
-    def _get_repo_url_from_name(
-        repo_name: str,
-        organization: Optional[str] = None,
-        private: bool = None,
-        use_auth_token: Optional[Union[bool, str]] = None,
-    ) -> str:
-        if isinstance(use_auth_token, str):
-            token = use_auth_token
-        elif use_auth_token:
-            token = HfFolder.get_token()
-            if token is None:
-                raise ValueError(
-                    "You must login to the Hugging Face hub on this computer by typing `transformers-cli login` and "
-                    "entering your credentials to use `use_auth_token=True`. Alternatively, you can pass your own "
-                    "token as the `use_auth_token` argument."
-                )
-        else:
-            token = None
-
-        # Special provision for the test endpoint (CI)
-        return create_repo(
-            token,
-            repo_name,
-            organization=organization,
-            private=private,
-            repo_type=None,
-            exist_ok=True,
-        )
-
-    @classmethod
-    def _create_or_get_repo(
-        cls,
-        repo_path_or_name: Optional[str] = None,
-        repo_url: Optional[str] = None,
-        organization: Optional[str] = None,
-        private: bool = None,
-        use_auth_token: Optional[Union[bool, str]] = None,
-    ) -> Repository:
-        if repo_path_or_name is None and repo_url is None:
-            raise ValueError("You need to specify a `repo_path_or_name` or a `repo_url`.")
-
-        if use_auth_token is None and repo_url is None:
-            use_auth_token = True
-
-        if repo_path_or_name is None:
-            repo_path_or_name = repo_url.split("/")[-1]
-
-        if repo_url is None and not os.path.exists(repo_path_or_name):
-            repo_name = Path(repo_path_or_name).name
-            repo_url = cls._get_repo_url_from_name(
-                repo_name, organization=organization, private=private, use_auth_token=use_auth_token
+        if "repo_path_or_name" in deprecated_kwargs:
+            warnings.warn(
+                "The `repo_path_or_name` argument is deprecated and will be removed in v5 of Transformers. Use "
+                "`repo_id` instead."
             )
+            repo_id = deprecated_kwargs.pop("repo_path_or_name")
+        # Deprecation warning will be sent after for repo_url and organization
+        repo_url = deprecated_kwargs.pop("repo_url", None)
+        organization = deprecated_kwargs.pop("organization", None)
 
-        # Create a working directory if it does not exist.
-        if not os.path.exists(repo_path_or_name):
-            os.makedirs(repo_path_or_name)
+        if os.path.isdir(repo_id):
+            working_dir = repo_id
+            repo_id = repo_id.split(os.path.sep)[-1]
+        else:
+            working_dir = repo_id.split("/")[-1]
 
-        repo = Repository(repo_path_or_name, clone_from=repo_url, use_auth_token=use_auth_token)
-        repo.git_pull()
-        return repo
+        repo_id, token = self._create_repo(
+            repo_id, private=private, use_auth_token=use_auth_token, repo_url=repo_url, organization=organization
+        )
 
-    @classmethod
-    def _push_to_hub(cls, repo: Repository, commit_message: Optional[str] = None) -> str:
-        if commit_message is None:
-            if "Tokenizer" in cls.__name__:
-                commit_message = "add tokenizer"
-            elif "Config" in cls.__name__:
-                commit_message = "add config"
-            else:
-                commit_message = "add model"
+        if use_temp_dir is None:
+            use_temp_dir = not os.path.isdir(working_dir)
 
-        return repo.push_to_hub(commit_message=commit_message)
+        with working_or_temp_dir(working_dir=working_dir, use_temp_dir=use_temp_dir) as work_dir:
+            files_timestamps = self._get_files_timestamps(work_dir)
+
+            # Save all files.
+            self.save_pretrained(work_dir, max_shard_size=max_shard_size)
+
+            return self._upload_modified_files(
+                work_dir, repo_id, files_timestamps, commit_message=commit_message, token=token, create_pr=create_pr
+            )
 
 
 def get_full_repo_name(model_id: str, organization: Optional[str] = None, token: Optional[str] = None):
@@ -1028,3 +1043,156 @@ def get_full_repo_name(model_id: str, organization: Optional[str] = None, token:
         return f"{username}/{model_id}"
     else:
         return f"{organization}/{model_id}"
+
+
+def send_example_telemetry(example_name, *example_args, framework="pytorch"):
+    """
+    Sends telemetry that helps tracking the examples use.
+
+    Args:
+        example_name (`str`): The name of the example.
+        *example_args (dataclasses or `argparse.ArgumentParser`): The arguments to the script. This function will only
+            try to extract the model and dataset name from those. Nothing else is tracked.
+        framework (`str`, *optional*, defaults to `"pytorch"`): The framework for the example.
+    """
+    if is_offline_mode():
+        return
+
+    data = {"example": example_name, "framework": framework}
+    for args in example_args:
+        args_as_dict = {k: v for k, v in args.__dict__.items() if not k.startswith("_") and v is not None}
+        if "model_name_or_path" in args_as_dict:
+            model_name = args_as_dict["model_name_or_path"]
+            # Filter out local paths
+            if not os.path.isdir(model_name):
+                data["model_name"] = args_as_dict["model_name_or_path"]
+        if "dataset_name" in args_as_dict:
+            data["dataset_name"] = args_as_dict["dataset_name"]
+        elif "task_name" in args_as_dict:
+            # Extract script name from the example_name
+            script_name = example_name.replace("tf_", "").replace("flax_", "").replace("run_", "")
+            script_name = script_name.replace("_no_trainer", "")
+            data["dataset_name"] = f"{script_name}-{args_as_dict['task_name']}"
+
+    headers = {"user-agent": http_user_agent(data)}
+    try:
+        r = requests.head(HUGGINGFACE_CO_EXAMPLES_TELEMETRY, headers=headers)
+        r.raise_for_status()
+    except Exception:
+        # We don't want to error in case of connection errors of any kind.
+        pass
+
+
+def convert_file_size_to_int(size: Union[int, str]):
+    """
+    Converts a size expressed as a string with digits an unit (like `"5MB"`) to an integer (in bytes).
+
+    Args:
+        size (`int` or `str`): The size to convert. Will be directly returned if an `int`.
+
+    Example:
+    ```py
+    >>> convert_file_size_to_int("1MiB")
+    1048576
+    ```
+    """
+    if isinstance(size, int):
+        return size
+    if size.upper().endswith("GIB"):
+        return int(size[:-3]) * (2**30)
+    if size.upper().endswith("MIB"):
+        return int(size[:-3]) * (2**20)
+    if size.upper().endswith("KIB"):
+        return int(size[:-3]) * (2**10)
+    if size.upper().endswith("GB"):
+        int_size = int(size[:-2]) * (10**9)
+        return int_size // 8 if size.endswith("b") else int_size
+    if size.upper().endswith("MB"):
+        int_size = int(size[:-2]) * (10**6)
+        return int_size // 8 if size.endswith("b") else int_size
+    if size.upper().endswith("KB"):
+        int_size = int(size[:-2]) * (10**3)
+        return int_size // 8 if size.endswith("b") else int_size
+    raise ValueError("`size` is not in a valid format. Use an integer followed by the unit, e.g., '5GB'.")
+
+
+def get_checkpoint_shard_files(
+    pretrained_model_name_or_path,
+    index_filename,
+    cache_dir=None,
+    force_download=False,
+    proxies=None,
+    resume_download=False,
+    local_files_only=False,
+    use_auth_token=None,
+    user_agent=None,
+    revision=None,
+    mirror=None,
+    subfolder="",
+):
+    """
+    For a given model:
+
+    - download and cache all the shards of a sharded checkpoint if `pretrained_model_name_or_path` is a model ID on the
+      Hub
+    - returns the list of paths to all the shards, as well as some metadata.
+
+    For the description of each arg, see [`PreTrainedModel.from_pretrained`]. `index_filename` is the full path to the
+    index (downloaded and cached if `pretrained_model_name_or_path` is a model ID on the Hub).
+    """
+    import json
+
+    if not os.path.isfile(index_filename):
+        raise ValueError(f"Can't find a checkpoint index ({index_filename}) in {pretrained_model_name_or_path}.")
+
+    with open(index_filename, "r") as f:
+        index = json.loads(f.read())
+
+    shard_filenames = sorted(list(set(index["weight_map"].values())))
+    sharded_metadata = index["metadata"]
+    sharded_metadata["all_checkpoint_keys"] = list(index["weight_map"].keys())
+
+    # First, let's deal with local folder.
+    if os.path.isdir(pretrained_model_name_or_path):
+        shard_filenames = [os.path.join(pretrained_model_name_or_path, subfolder, f) for f in shard_filenames]
+        return shard_filenames, sharded_metadata
+
+    # At this stage pretrained_model_name_or_path is a model identifier on the Hub
+    cached_filenames = []
+    for shard_filename in shard_filenames:
+        shard_url = hf_bucket_url(
+            pretrained_model_name_or_path,
+            filename=shard_filename,
+            revision=revision,
+            mirror=mirror,
+            subfolder=subfolder if len(subfolder) > 0 else None,
+        )
+
+        try:
+            # Load from URL
+            cached_filename = cached_path(
+                shard_url,
+                cache_dir=cache_dir,
+                force_download=force_download,
+                proxies=proxies,
+                resume_download=resume_download,
+                local_files_only=local_files_only,
+                use_auth_token=use_auth_token,
+                user_agent=user_agent,
+            )
+        # We have already dealt with RepositoryNotFoundError and RevisionNotFoundError when getting the index, so
+        # we don't have to catch them here.
+        except EntryNotFoundError:
+            raise EnvironmentError(
+                f"{pretrained_model_name_or_path} does not appear to have a file named {shard_filename} which is "
+                "required according to the checkpoint index."
+            )
+        except HTTPError:
+            raise EnvironmentError(
+                f"We couldn't connect to '{HUGGINGFACE_CO_RESOLVE_ENDPOINT}' to load {shard_filename}. You should try"
+                " again after checking your internet connection."
+            )
+
+        cached_filenames.append(cached_filename)
+
+    return cached_filenames, sharded_metadata
